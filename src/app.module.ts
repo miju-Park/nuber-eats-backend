@@ -12,7 +12,7 @@ import { RestaurantsModule } from './restaurants/restaurants.module';
       /**
        * Schema 파일 정의없이 Code로 Schema 자동 정의
        */
-      autoSchemaFile: true,
+      autoSchemaFile: true,//파일로 저장하지 않는다는 뜻
     }),
     RestaurantsModule,
   ],
