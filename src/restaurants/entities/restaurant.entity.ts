@@ -1,3 +1,4 @@
+import { Optional } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { IsBoolean, IsString, Length } from 'class-validator';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
@@ -21,12 +22,13 @@ export class Restaurant {
   @Length(5)
   name: string;
 
-  @Field((is) => Boolean)
-  @Column()
+  @Field((is) => Boolean, { defaultValue: true }) //graphql에 defaultValue 설정
+  @Column({ default: true }) //database에 defaultValue 설정
+  @Optional() //class-validator: optional field
   @IsBoolean()
   isVegan: boolean;
 
-  @Field((is) => String)
+  @Field((is) => String, { nullable: true }) //nullable로 설정하면 입력을 안하면 dto에 필드값이 비게 됨
   @Column()
   @IsString()
   address: string;
