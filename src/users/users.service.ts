@@ -94,6 +94,9 @@ export class UsersService {
   async findById(id: number): Promise<UserProfileOuput> {
     try {
       const user = await this.users.findOne({ id });
+      if (!user) {
+        throw new Error('erro');
+      }
       return {
         ok: true,
         user,
