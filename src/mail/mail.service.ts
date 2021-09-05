@@ -23,7 +23,6 @@ export class MailService {
         code = eVar.value;
       }
     });
-    console.log(emailVars);
     const content = `Hello. Please verify your code : ${code}`;
     const form = new FormData();
     form.append('from', `MJ from Nuber Eats <mailgun@${this.options.domain}>`);
