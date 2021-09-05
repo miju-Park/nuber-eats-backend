@@ -12,6 +12,7 @@ import { EditProfileInput, EditProfileOutput } from './dto/edit-profile.dto';
 import { Verification } from './entities/verification.entity';
 import { UserProfileOuput } from './dto/user-profile.dto';
 import { VerifyEmailOutput } from './dto/verify-email.dto';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +21,7 @@ export class UsersService {
     @InjectRepository(Verification)
     private readonly verifications: Repository<Verification>,
     private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
   async createAccount({
@@ -42,11 +44,12 @@ export class UsersService {
       const user = await this.users.save(
         this.users.create({ email, password, role }),
       );
-      await this.verifications.save(
+      const verification = await this.verifications.save(
         this.verifications.create({
           user,
         }),
       );
+      this.mailService.sendVerificationEmail(user.email, verification.code);
       return { ok: true };
     } catch (e) {
       return { ok: false, error: "Couldn't create account" };
@@ -109,14 +112,20 @@ export class UsersService {
   ): Promise<EditProfileOutput> {
     try {
       const user = await this.users.findOne(userId);
+
       if (email) {
         user.email = email;
-        user.verificed = false;
-        await this.verifications.save(this.verifications.create({ user }));
+        user.verified = false;
+        await this.verifications.delete({ user: { id: user.id } });
+        const verification = await this.verifications.save(
+          this.verifications.create({ user }),
+        );
+        this.mailService.sendVerificationEmail(user.email, verification.code);
       }
       if (password) {
         user.password = password;
       }
+      console.log(user);
       await this.users.save(user);
       return {
         ok: true,
@@ -136,8 +145,9 @@ export class UsersService {
         { relations: ['user'] },
       );
       if (verification) {
-        verification.user.verificed = true;
-        this.users.save(verification.user);
+        verification.user.verified = true;
+        await this.users.save(verification.user);
+        await this.verifications.delete(verification.id);
         return { ok: true };
       }
       return { ok: false, error: 'Verification not found.' };

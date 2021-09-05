@@ -23,12 +23,12 @@ registerEnumType(UserRole, { name: 'UserRole' });
 @ObjectType()
 @Entity()
 export class User extends CoreEntity {
-  @Column({ select: false })
+  @Column()
   @Field((types) => String)
   @IsEmail()
   email: string;
 
-  @Column()
+  @Column({ select: false })
   @Field((types) => String)
   password: string;
 
@@ -42,7 +42,7 @@ export class User extends CoreEntity {
 
   @Field((types) => Boolean)
   @Column({ default: false })
-  verificed: boolean;
+  verified: boolean;
 
   @BeforeInsert()
   @BeforeUpdate()
