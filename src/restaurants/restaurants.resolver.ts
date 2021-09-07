@@ -1,6 +1,10 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { CreateRestaurantDto } from './dtos/create-restaurant.dto';
-import { UpdateRestaurantDto } from './dtos/update-restaurant.dto';
+import { AuthUser } from 'src/auth/auth-user.decorator';
+import { User } from 'src/users/entities/user.entity';
+import {
+  CreateRestarantOutput,
+  CreateRestaurantInputType,
+} from './dtos/create-restaurant.dto';
 import { Restaurant } from './entities/restaurant.entity';
 import { RestaurantService } from './restaurants.service';
 
@@ -15,30 +19,15 @@ import { RestaurantService } from './restaurants.service';
 export class RestaurantsResolver {
   //Resolver에 Service를 연결
   constructor(private readonly restaurantService: RestaurantService) {}
-  @Query((returns) => [Restaurant])
-  restaurants(): Promise<Restaurant[]> {
-    return this.restaurantService.getAll();
-  }
-  @Mutation((returns) => Boolean)
+
+  @Mutation((returns) => CreateRestarantOutput)
   async createRestaurant(
-    @Args('input') createRestaurantInput: CreateRestaurantDto,
-  ): Promise<boolean> {
-    try {
-      await this.restaurantService.createRestaurant(createRestaurantInput);
-      return true;
-    } catch (e) {
-      console.log(e);
-      return false;
-    }
-  }
-  @Mutation((returns) => Boolean)
-  async updateRestaurant(@Args('input') updateRestaurant: UpdateRestaurantDto) {
-    try {
-      await this.restaurantService.updateRestaurant(updateRestaurant);
-      return true;
-    } catch (e) {
-      console.log(e);
-      return false;
-    }
+    @AuthUser() authUser: User,
+    @Args('input') createRestaurantInput: CreateRestaurantInputType,
+  ): Promise<CreateRestarantOutput> {
+    return this.restaurantService.createRestaurant(
+      authUser,
+      createRestaurantInput,
+    );
   }
 }

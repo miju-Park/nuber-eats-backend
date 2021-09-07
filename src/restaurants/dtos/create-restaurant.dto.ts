@@ -1,4 +1,11 @@
-import { InputType, OmitType } from '@nestjs/graphql';
+import {
+  Field,
+  InputType,
+  ObjectType,
+  OmitType,
+  PickType,
+} from '@nestjs/graphql';
+import { MutationOutput } from 'src/common/dot/output.dto';
 import { Restaurant } from '../entities/restaurant.entity';
 
 /**
@@ -10,8 +17,14 @@ import { Restaurant } from '../entities/restaurant.entity';
  * base type(Restaurant)는 InputType 이여야 하는데, Restaurant는 ObjectType
  * -> 세번째 인자 decorators에 InputType이라고 명시해줌
  */
-export class CreateRestaurantDto extends OmitType(
-  Restaurant,
-  ['id'],
-  InputType,
-) {}
+export class CreateRestaurantInputType extends PickType(Restaurant, [
+  'name',
+  'coverImg',
+  'address',
+]) {
+  @Field((type) => String)
+  categoryName: string;
+}
+
+@ObjectType()
+export class CreateRestarantOutput extends MutationOutput {}
