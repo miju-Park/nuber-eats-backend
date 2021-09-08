@@ -8,18 +8,24 @@ import {
   CreateRestarantOutput,
   CreateRestaurantInputType,
 } from './dtos/create-restaurant.dto';
+import {
+  DeleteRestaurantInput,
+  DeleteRestaurantOutput,
+} from './dtos/delete-restaurant.dto';
 import { EditRestaurantInput } from './dtos/edit-restaurant.dto';
 import { Category } from './entities/category.entity';
 import { Restaurant } from './entities/restaurant.entity';
 import { CategoryRepository } from './repositories/category.repository';
+import { RestaurantRepository } from './repositories/restaurant.repository';
 
 @Injectable()
 export class RestaurantService {
   constructor(
-    @InjectRepository(Restaurant)
-    private readonly restaurants: Repository<Restaurant>,
+    private readonly restaurants: RestaurantRepository,
     private readonly categories: CategoryRepository,
-  ) {}
+  ) {
+    console.log(this.restaurants.checkIsOwner);
+  }
   getAll(): Promise<Restaurant[]> {
     return this.restaurants.find();
   }
@@ -52,20 +58,12 @@ export class RestaurantService {
     editRestaurantInput: EditRestaurantInput,
   ): Promise<EditProfileOutput> {
     try {
-      const restaurant = await this.restaurants.findOne(
+      const isOwnerResults = await this.restaurants.checkIsOwner(
         editRestaurantInput.restaurantId,
+        owner,
       );
-      if (!restaurant) {
-        return {
-          ok: false,
-          error: 'Restaurant Not Found',
-        };
-      }
-      if (owner.id !== restaurant.ownerId) {
-        return {
-          ok: false,
-          error: "You can't edit restaruant that you don't own",
-        };
+      if (isOwnerResults.ok === false) {
+        return isOwnerResults;
       }
       let category: Category = null;
       if (editRestaurantInput.categoryName) {
@@ -82,6 +80,30 @@ export class RestaurantService {
       ]);
 
       return { ok: true };
+    } catch (error) {
+      return {
+        ok: false,
+        error,
+      };
+    }
+  }
+
+  async deleteRestaurant(
+    owner: User,
+    { restaurantId }: DeleteRestaurantInput,
+  ): Promise<DeleteRestaurantOutput> {
+    try {
+      const isOwnerResults = await this.restaurants.checkIsOwner(
+        restaurantId,
+        owner,
+      );
+      if (isOwnerResults.ok === false) {
+        return isOwnerResults;
+      }
+      await this.restaurants.delete(restaurantId);
+      return {
+        ok: true,
+      };
     } catch (error) {
       return {
         ok: false,
